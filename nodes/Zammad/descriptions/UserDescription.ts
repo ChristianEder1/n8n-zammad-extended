@@ -73,6 +73,73 @@ export const userFields: INodeProperties[] = [
         default: 1,
         description: 'Seitennummer für die Paginierung',
     },
+    {
+        displayName: 'Filter',
+        name: 'filters',
+        type: 'collection',
+        placeholder: 'Filter hinzufügen',
+        default: {},
+        displayOptions: { show: { resource: ['user'], operation: ['getAll'] } },
+        options: [
+            {
+                displayName: 'Hat Telefon',
+                name: 'hasPhone',
+                type: 'boolean',
+                default: false,
+                description: 'Whether nur Benutzer mit eingetragener Telefonnummer anzeigen',
+            },
+            {
+                displayName: 'Kein Telefon',
+                name: 'noPhone',
+                type: 'boolean',
+                default: false,
+                description: 'Whether nur Benutzer ohne Telefonnummer anzeigen',
+            },
+            {
+                displayName: 'Hat Mobiltelefon',
+                name: 'hasMobile',
+                type: 'boolean',
+                default: false,
+            },
+            {
+                displayName: 'Kein Mobiltelefon',
+                name: 'noMobile',
+                type: 'boolean',
+                default: false,
+            },
+            {
+                displayName: 'Hat E-Mail',
+                name: 'hasEmail',
+                type: 'boolean',
+                default: false,
+            },
+            {
+                displayName: 'Keine E-Mail',
+                name: 'noEmail',
+                type: 'boolean',
+                default: false,
+            },
+            {
+                displayName: 'VIP',
+                name: 'vip',
+                type: 'options',
+                options: [
+                    { name: 'Alle', value: 'all' },
+                    { name: 'Nur VIP', value: 'yes' },
+                    { name: 'Kein VIP', value: 'no' },
+                ],
+                default: 'all',
+            },
+            {
+                displayName: 'Land',
+                name: 'country',
+                type: 'string',
+                default: '',
+                placeholder: 'z. B. Deutschland',
+                description: 'Nur Benutzer aus diesem Land (Teilübereinstimmung)',
+            },
+        ],
+    },
 
     // ─── SEARCH ──────────────────────────────────────────────────────────────────
     {
@@ -92,6 +159,14 @@ export const userFields: INodeProperties[] = [
         displayOptions: { show: { resource: ['user'], operation: ['search'] } },
         typeOptions: { minValue: 1, maxValue: 500 },
         default: 25,
+    },
+    {
+        displayName: 'Telefonnummer normalisieren',
+        name: 'normalizePhone',
+        type: 'boolean',
+        displayOptions: { show: { resource: ['user'], operation: ['search'] } },
+        default: false,
+        description: 'Whether Leerzeichen und Sonderzeichen aus der Sucheingabe entfernen – nützlich wenn Nummern mit Leerzeichen gespeichert sind (z. B. "+499119264444" findet "+49 911 9264444")',
     },
 
     // ─── CREATE ──────────────────────────────────────────────────────────────────

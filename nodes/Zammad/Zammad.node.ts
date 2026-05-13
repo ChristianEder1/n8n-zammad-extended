@@ -103,6 +103,17 @@ function esc(s: string): string {
 }
 
 /**
+ * Normalisiert eine Telefonnummer-Sucheingabe zu einer Elasticsearch-Wildcard-Query.
+ * Entfernt Leerzeichen/Sonderzeichen und sucht anhand der letzten 7 Ziffern.
+ * Beispiel: "+499119264444" → "phone:*9264444* OR mobile:*9264444*"
+ */
+function buildPhoneSearchQuery(raw: string): string {
+    const digits = raw.replace(/[^\d]/g, '');
+    const sig = digits.length >= 7 ? digits.slice(-7) : digits;
+    return `phone:*${sig}* OR mobile:*${sig}*`;
+}
+
+/**
  * Extrahiert Tickets aus der Zammad-Suchantwort.
  * Zammad liefert: { assets: { Ticket: { "1": {...}, "2": {...} } }, result: [{id:1,type:"Ticket"},...] }
  * Das result-Array bewahrt die Sortierreihenfolge.
@@ -369,17 +380,37 @@ export class Zammad implements INodeType {
                     else if (operation === 'getAll') {
                         const limit = this.getNodeParameter('limit', i, 25) as number;
                         const page = this.getNodeParameter('page', i, 1) as number;
+                        const filters = this.getNodeParameter('filters', i, {}) as IDataObject;
+
                         const result = await req('GET', '/api/v1/users', {
                             qs: { per_page: String(limit), page: String(page) },
-                        });
-                        for (const user of result as IDataObject[]) {
+                        }) as IDataObject[];
+
+                        let users = result;
+                        if (filters.hasPhone) users = users.filter(u => u.phone);
+                        if (filters.hasMobile) users = users.filter(u => u.mobile);
+                        if (filters.hasEmail) users = users.filter(u => u.email);
+                        if (filters.noPhone) users = users.filter(u => !u.phone);
+                        if (filters.noMobile) users = users.filter(u => !u.mobile);
+                        if (filters.noEmail) users = users.filter(u => !u.email);
+                        if (filters.vip === 'yes') users = users.filter(u => u.vip === true);
+                        if (filters.vip === 'no') users = users.filter(u => !u.vip);
+                        if (filters.country) {
+                            const c = (filters.country as string).toLowerCase();
+                            users = users.filter(u => (u.country as string || '').toLowerCase().includes(c));
+                        }
+
+                        for (const user of users) {
                             returnData.push({ json: user, pairedItem: { item: i } });
                         }
                     }
 
                     else if (operation === 'search') {
-                        const query = this.getNodeParameter('query', i) as string;
+                        const rawQuery = this.getNodeParameter('query', i) as string;
+                        const normalizePhone = this.getNodeParameter('normalizePhone', i, false) as boolean;
                         const limit = this.getNodeParameter('searchLimit', i, 25) as number;
+
+                        const query = normalizePhone ? buildPhoneSearchQuery(rawQuery) : rawQuery;
                         const result = await req('GET', '/api/v1/users/search', {
                             qs: { query, limit: String(limit) },
                         });
