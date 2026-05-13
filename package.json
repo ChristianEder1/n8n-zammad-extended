@@ -1,0 +1,46 @@
+{
+    "name": "n8n-nodes-zammad-extended",
+    "version": "1.0.0",
+    "description": "Extended n8n community node for Zammad – advanced ticket filters, articles, users, organizations and tags",
+    "keywords": [
+        "n8n-community-node-package",
+        "zammad",
+        "helpdesk",
+        "ticketing",
+        "support"
+    ],
+    "license": "MIT",
+    "author": {
+        "name": "supportportal.online"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/your-org/n8n-nodes-zammad-extended.git"
+    },
+    "main": "dist/nodes/Zammad/Zammad.node.js",
+    "scripts": {
+        "build": "tsc && npm run copy:svg",
+        "copy:svg": "node -e \"const fs=require('fs'),p=require('path');const src='nodes/Zammad/zammad.svg';const dst='dist/nodes/Zammad/zammad.svg';fs.mkdirSync(p.dirname(dst),{recursive:true});fs.copyFileSync(src,dst);\"",
+        "dev": "tsc --watch",
+        "prepublishOnly": "npm run build"
+    },
+    "files": [
+        "dist"
+    ],
+    "n8n": {
+        "n8nNodesApiVersion": 1,
+        "credentials": [
+            "dist/credentials/ZammadApi.credentials.js"
+        ],
+        "nodes": [
+            "dist/nodes/Zammad/Zammad.node.js"
+        ]
+    },
+    "devDependencies": {
+        "typescript": "~5.1.6",
+        "n8n-workflow": "*"
+    },
+    "peerDependencies": {
+        "n8n-workflow": "*"
+    }
+}

@@ -1,0 +1,24 @@
+{
+    "compilerOptions": {
+        "strict": true,
+        "target": "ES2019",
+        "lib": [
+            "ES2019"
+        ],
+        "module": "commonjs",
+        "moduleResolution": "node",
+        "sourceMap": true,
+        "outDir": "./dist",
+        "baseUrl": ".",
+        "skipLibCheck": true,
+        "esModuleInterop": true
+    },
+    "include": [
+        "credentials/**/*",
+        "nodes/**/*"
+    ],
+    "exclude": [
+        "node_modules",
+        "dist"
+    ]
+}
