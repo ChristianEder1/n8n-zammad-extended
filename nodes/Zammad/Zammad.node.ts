@@ -134,6 +134,7 @@ export class Zammad implements INodeType {
         description:
             'Zammad Helpdesk – erweiterte Filter, Tickets, Artikel, Benutzer, Organisationen und Tags',
         defaults: { name: 'Zammad Extended' },
+        usableAsTool: true,
         inputs: ['main'],
         outputs: ['main'],
         credentials: [{ name: 'zammadApi', required: true }],
