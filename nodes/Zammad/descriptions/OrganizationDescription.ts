@@ -38,6 +38,12 @@ export const organizationOperations: INodeProperties[] = [
                 description: 'Bestehende Organisation aktualisieren',
                 action: 'Update an organization',
             },
+            {
+                name: 'Mitglieder abrufen',
+                value: 'members',
+                description: 'Alle Benutzer einer Organisation abrufen',
+                action: 'Get members of an organization',
+            },
         ],
         default: 'getAll',
     },
@@ -50,7 +56,7 @@ export const organizationFields: INodeProperties[] = [
         name: 'organizationId',
         type: 'number',
         required: true,
-        displayOptions: { show: { resource: ['organization'], operation: ['get', 'update'] } },
+        displayOptions: { show: { resource: ['organization'], operation: ['get', 'update', 'members'] } },
         default: 0,
     },
 
@@ -79,6 +85,17 @@ export const organizationFields: INodeProperties[] = [
         default: '',
         placeholder: 'z. B. ACME GmbH',
         description: 'Gibt nur Organisationen zurück, deren Name diesen Begriff enthält',
+    },
+
+    // ─── MEMBERS ─────────────────────────────────────────────────────────────────
+    {
+        displayName: 'Limit',
+        name: 'membersLimit',
+        type: 'number',
+        displayOptions: { show: { resource: ['organization'], operation: ['members'] } },
+        typeOptions: { minValue: 1, maxValue: 500 },
+        default: 100,
+        description: 'Maximale Anzahl zurückzugebender Mitglieder',
     },
 
     // ─── SEARCH ──────────────────────────────────────────────────────────────────
