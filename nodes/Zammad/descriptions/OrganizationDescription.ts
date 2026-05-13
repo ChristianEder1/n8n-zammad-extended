@@ -71,6 +71,15 @@ export const organizationFields: INodeProperties[] = [
         typeOptions: { minValue: 1 },
         default: 1,
     },
+    {
+        displayName: 'Name (Filter)',
+        name: 'nameFilter',
+        type: 'string',
+        displayOptions: { show: { resource: ['organization'], operation: ['getAll'] } },
+        default: '',
+        placeholder: 'z. B. ACME GmbH',
+        description: 'Gibt nur Organisationen zurück, deren Name diesen Begriff enthält',
+    },
 
     // ─── SEARCH ──────────────────────────────────────────────────────────────────
     {

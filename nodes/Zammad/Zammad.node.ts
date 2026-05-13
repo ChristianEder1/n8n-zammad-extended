@@ -468,10 +468,20 @@ export class Zammad implements INodeType {
                     else if (operation === 'getAll') {
                         const limit = this.getNodeParameter('limit', i, 25) as number;
                         const page = this.getNodeParameter('page', i, 1) as number;
-                        const result = await req('GET', '/api/v1/organizations', {
-                            qs: { per_page: String(limit), page: String(page) },
-                        });
-                        for (const org of result as IDataObject[]) {
+                        const nameFilter = this.getNodeParameter('nameFilter', i, '') as string;
+
+                        let orgs: IDataObject[];
+                        if (nameFilter) {
+                            orgs = await req('GET', '/api/v1/organizations/search', {
+                                qs: { query: nameFilter, limit: String(limit) },
+                            }) as IDataObject[];
+                        } else {
+                            orgs = await req('GET', '/api/v1/organizations', {
+                                qs: { per_page: String(limit), page: String(page) },
+                            }) as IDataObject[];
+                        }
+
+                        for (const org of orgs) {
                             returnData.push({ json: org, pairedItem: { item: i } });
                         }
                     }
