@@ -295,6 +295,19 @@ export class Zammad implements INodeType {
                         if (fields.customer) body.customer = fields.customer;
 
                         const result = await req('PUT', `/api/v1/tickets/${id}`, { body });
+
+                        if (fields.note) {
+                            await req('POST', '/api/v1/ticket_articles', {
+                                body: {
+                                    ticket_id: id,
+                                    body: fields.note,
+                                    type: 'note',
+                                    internal: !fields.noteInternal,
+                                    content_type: 'text/plain',
+                                },
+                            });
+                        }
+
                         returnData.push({ json: result as IDataObject, pairedItem: { item: i } });
                     }
 

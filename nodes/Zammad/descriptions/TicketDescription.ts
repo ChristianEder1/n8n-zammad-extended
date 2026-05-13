@@ -402,6 +402,21 @@ export const ticketFields: INodeProperties[] = [
                 type: 'string',
                 default: '',
             },
+            {
+                displayName: 'Notiz',
+                name: 'note',
+                type: 'string',
+                typeOptions: { rows: 4 },
+                default: '',
+                description: 'Fügt dem Ticket einen internen Kommentar (Notiz) hinzu',
+            },
+            {
+                displayName: 'Notiz öffentlich',
+                name: 'noteInternal',
+                type: 'boolean',
+                default: false,
+                description: 'Whether die Notiz intern (nur Agenten) oder öffentlich (für Kunden sichtbar) ist',
+            },
         ],
     },
 ];
