@@ -293,12 +293,28 @@ export class Zammad implements INodeType {
                         const rawQuery = this.getNodeParameter('query', i) as string;
                         const searchIn = this.getNodeParameter('searchIn', i, 'fulltext') as string;
                         const limit = this.getNodeParameter('searchLimit', i, 25) as number;
+                        const searchOptions = this.getNodeParameter('searchOptions', i, {}) as IDataObject;
 
-                        const query = buildSearchQuery(rawQuery, searchIn);
+                        let query = buildSearchQuery(rawQuery, searchIn);
 
-                        const raw = await req('GET', '/api/v1/tickets/search', {
-                            qs: { query, limit: String(limit) },
-                        });
+                        // Custom Field Filter als Elasticsearch-Klausel anhängen
+                        const CF_SEARCH_FILTERS = [
+                            'tickettype', 'produktwahl', 'prio', 'type', 'supportart',
+                            'betroffenerpartner', 'ticketqualitart', 'e_mail_text_anmeldung',
+                            'kiticketinfo', 'fonio_ticket',
+                        ] as const;
+                        for (const cf of CF_SEARCH_FILTERS) {
+                            const val = searchOptions[cf];
+                            if (val !== undefined && val !== '') {
+                                query += ` AND ${cf}:"${(val as string).replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
+                            }
+                        }
+
+                        const qs: IDataObject = { query, limit: String(limit) };
+                        if (searchOptions.sort_by) qs.sort_by = searchOptions.sort_by as string;
+                        if (searchOptions.order_by) qs.order_by = searchOptions.order_by as string;
+
+                        const raw = await req('GET', '/api/v1/tickets/search', { qs });
 
                         const tickets = extractTicketsFromSearchResult(raw as IDataObject);
                         for (const t of tickets) {
