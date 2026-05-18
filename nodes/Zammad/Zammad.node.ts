@@ -20,6 +20,8 @@ import {
     organizationFields,
     tagOperations,
     tagFields,
+    customApiCallOperations,
+    customApiCallFields,
 } from './descriptions';
 
 // ─── Hilfsfunktionen ──────────────────────────────────────────────────────────
@@ -163,6 +165,7 @@ export class Zammad implements INodeType {
                     { name: 'Benutzer', value: 'user' },
                     { name: 'Organisation', value: 'organization' },
                     { name: 'Tag', value: 'tag' },
+                    { name: 'Custom API Call', value: 'customApiCall' },
                 ],
                 default: 'ticket',
             },
@@ -176,6 +179,8 @@ export class Zammad implements INodeType {
             ...organizationFields,
             ...tagOperations,
             ...tagFields,
+            ...customApiCallOperations,
+            ...customApiCallFields,
         ],
     };
 
@@ -216,7 +221,7 @@ export class Zammad implements INodeType {
 
         // ── Generischer HTTP-Helfer ──────────────────────────────────────────────
         const req = async (
-            method: 'GET' | 'POST' | 'PUT' | 'DELETE',
+            method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
             path: string,
             opts: { qs?: IDataObject; body?: IDataObject } = {},
         ): Promise<unknown> => {
@@ -604,6 +609,42 @@ export class Zammad implements INodeType {
                             body: { object: 'Ticket', o_id: ticketId, item: tag },
                         });
                         returnData.push({ json: { success: true, ticket_id: ticketId, tag }, pairedItem: { item: i } });
+                    }
+                }
+
+                // ════════════════════════════════════════════════════════════════════
+                //  CUSTOM API CALL
+                // ════════════════════════════════════════════════════════════════════
+                else if (resource === 'customApiCall') {
+                    const method = this.getNodeParameter('httpMethod', i) as 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+                    const endpoint = this.getNodeParameter('endpoint', i) as string;
+
+                    // Query-Parameter zusammenbauen
+                    const qpRaw = this.getNodeParameter('queryParameters', i, {}) as IDataObject;
+                    const qs: IDataObject = {};
+                    for (const p of (qpRaw.parameters as IDataObject[] | undefined) ?? []) {
+                        if (p.name) qs[p.name as string] = p.value;
+                    }
+
+                    // Body nur bei POST/PUT/PATCH
+                    let body: IDataObject | undefined;
+                    if (['POST', 'PUT', 'PATCH'].includes(method)) {
+                        const rawBody = this.getNodeParameter('body', i, '{}') as string;
+                        try {
+                            body = JSON.parse(rawBody) as IDataObject;
+                        } catch {
+                            throw new NodeOperationError(this.getNode(), 'Body ist kein gültiges JSON', { itemIndex: i });
+                        }
+                    }
+
+                    const result = await req(method, endpoint, { qs, body });
+                    // Ergebnis normalisieren: Array → mehrere Items, Objekt → ein Item
+                    if (Array.isArray(result)) {
+                        for (const r of result as IDataObject[]) {
+                            returnData.push({ json: r, pairedItem: { item: i } });
+                        }
+                    } else {
+                        returnData.push({ json: result as IDataObject, pairedItem: { item: i } });
                     }
                 }
 

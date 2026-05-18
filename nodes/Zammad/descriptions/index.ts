@@ -3,3 +3,4 @@ export { articleOperations, articleFields } from './ArticleDescription';
 export { userOperations, userFields } from './UserDescription';
 export { organizationOperations, organizationFields } from './OrganizationDescription';
 export { tagOperations, tagFields } from './TagDescription';
+export { customApiCallOperations, customApiCallFields } from './CustomApiCallDescription';
