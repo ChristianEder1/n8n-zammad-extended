@@ -1,6 +1,6 @@
 {
     "name": "n8n-nodes-zammad-extended",
-    "version": "1.0.8",
+    "version": "1.0.9",
     "description": "Extended n8n community node for Zammad – advanced ticket filters, articles, users, organizations and tags",
     "keywords": [
         "n8n-community-node-package",
