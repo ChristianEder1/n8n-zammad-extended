@@ -663,6 +663,18 @@ export class Zammad implements INodeType {
                         if (p.name) qs[p.name as string] = p.value;
                     }
 
+                    // Dedizierte Felder für Ticket-Elasticsearch-Suche
+                    if (endpoint === '/api/v1/tickets/search') {
+                        const esQuery = this.getNodeParameter('esQuery', i, '*') as string;
+                        const esLimit = this.getNodeParameter('esLimit', i, 25) as number;
+                        const esSortBy = this.getNodeParameter('esSortBy', i, 'created_at') as string;
+                        const esOrderBy = this.getNodeParameter('esOrderBy', i, 'desc') as string;
+                        qs.query = esQuery;
+                        qs.limit = String(esLimit);
+                        qs.sort_by = esSortBy;
+                        qs.order_by = esOrderBy;
+                    }
+
                     // Body nur bei POST/PUT/PATCH
                     let body: IDataObject | undefined;
                     if (['POST', 'PUT', 'PATCH'].includes(method)) {

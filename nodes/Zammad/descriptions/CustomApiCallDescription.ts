@@ -233,11 +233,68 @@ export const customApiCallFields: INodeProperties[] = [
                 value: '/api/v1/getting_started',
                 description: 'GET → Zammad-Instanz-Informationen',
             },
+            {
+                name: 'Elasticsearch: Status prüfen',
+                value: '/api/v1/tickets/search',
+                description: 'GET → query=* limit=1 ausführen: Ergebnis = ES aktiv, Fehlermeldung = ES deaktiviert',
+            },
         ],
     },
-    // ── Kontext-Hinweise je Endpunkt ──────────────────────────────────────────────
+    // ── Dedizierte Felder: Ticket-Suche (Elasticsearch) ─────────────────────────
     {
-        displayName: '<b>Pflicht-Parameter:</b> <code>query</code> – Elasticsearch-Suchstring.<br><br><b>Beispiele:</b><ul><li><code>*</code> → alle Tickets</li><li><code>state.name:open</code> → offene Tickets</li><li><code>title:"Anmeldeproblem"</code> → Titelsuche</li><li><code>tickettype:"Kunde"</code> → Custom-Field-Filter</li><li><code>customer.email:"user@firma.de"</code> → nach Kunde</li></ul><b>Optionale Parameter:</b> <code>limit</code> (Standard 25), <code>sort_by</code> (z.B. <code>created_at</code>), <code>order_by</code> (<code>asc</code> / <code>desc</code>)<br><br>⚠️ Setzt voraus, dass Elasticsearch in Zammad aktiviert ist. Ohne ES liefert dieser Endpunkt leere Ergebnisse.',
+        displayName: 'Suchanfrage',
+        name: 'esQuery',
+        type: 'string',
+        required: true,
+        displayOptions: {
+            show: { resource: ['customApiCall'], operation: ['execute'], endpoint: ['/api/v1/tickets/search'] },
+        },
+        default: '*',
+        placeholder: 'z. B. * oder state.name:open oder tickettype:"Kunde"',
+        description: 'Elasticsearch-Suchstring. <code>*</code> = alle Tickets · <code>state.name:open</code> = offene Tickets · <code>title:"Anmeldung"</code> = Titelsuche · <code>tickettype:"Kunde"</code> = Custom-Field · <code>customer.email:"user@firma.de"</code> = nach Kunde',
+    },
+    {
+        displayName: 'Limit',
+        name: 'esLimit',
+        type: 'number',
+        displayOptions: {
+            show: { resource: ['customApiCall'], operation: ['execute'], endpoint: ['/api/v1/tickets/search'] },
+        },
+        typeOptions: { minValue: 1, maxValue: 500 },
+        default: 25,
+    },
+    {
+        displayName: 'Sortieren nach',
+        name: 'esSortBy',
+        type: 'options',
+        displayOptions: {
+            show: { resource: ['customApiCall'], operation: ['execute'], endpoint: ['/api/v1/tickets/search'] },
+        },
+        options: [
+            { name: 'Erstellt am', value: 'created_at' },
+            { name: 'Aktualisiert am', value: 'updated_at' },
+            { name: 'Ticketnummer', value: 'number' },
+            { name: 'Titel', value: 'title' },
+            { name: 'Status', value: 'state' },
+            { name: 'Priorität', value: 'priority' },
+        ],
+        default: 'created_at',
+    },
+    {
+        displayName: 'Sortierreihenfolge',
+        name: 'esOrderBy',
+        type: 'options',
+        displayOptions: {
+            show: { resource: ['customApiCall'], operation: ['execute'], endpoint: ['/api/v1/tickets/search'] },
+        },
+        options: [
+            { name: 'Absteigend (neueste zuerst)', value: 'desc' },
+            { name: 'Aufsteigend (älteste zuerst)', value: 'asc' },
+        ],
+        default: 'desc',
+    },
+    {
+        displayName: '⚠️ Elasticsearch muss in Zammad aktiviert sein. Fehlermeldung "No search backend found" bedeutet ES ist deaktiviert → dann stattdessen die Operation "Ticket → Get All" mit Filtern nutzen.',
         name: 'hintTicketSearch',
         type: 'notice',
         default: '',
