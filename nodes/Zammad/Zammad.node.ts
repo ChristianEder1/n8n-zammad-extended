@@ -1,6 +1,8 @@
 import {
     IExecuteFunctions,
+    ILoadOptionsFunctions,
     INodeExecutionData,
+    INodePropertyOptions,
     INodeType,
     INodeTypeDescription,
     IDataObject,
@@ -175,6 +177,33 @@ export class Zammad implements INodeType {
             ...tagOperations,
             ...tagFields,
         ],
+    };
+
+    methods = {
+        loadOptions: {
+            async getTicketCustomFields(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
+                const credentials = await this.getCredentials('zammadApi');
+                const baseUrl = (credentials.baseUrl as string).replace(/\/$/, '');
+                const apiToken = credentials.apiToken as string;
+
+                const attrs = (await this.helpers.httpRequest({
+                    method: 'GET',
+                    url: `${baseUrl}/api/v1/object_manager_attributes`,
+                    headers: {
+                        Authorization: `Token token=${apiToken}`,
+                    },
+                    qs: { object: 'Ticket' },
+                    json: true,
+                })) as IDataObject[];
+
+                return (Array.isArray(attrs) ? attrs : [])
+                    .filter((a) => a.active && a.editable && a.object === 'Ticket')
+                    .map((a) => ({
+                        name: String(a.display || a.name),
+                        value: String(a.name),
+                    }));
+            },
+        },
     };
 
     async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {

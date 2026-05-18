@@ -467,9 +467,10 @@ export const ticketFields: INodeProperties[] = [
                     {
                         displayName: 'Feldname',
                         name: 'name',
-                        type: 'string',
+                        type: 'options',
+                        typeOptions: { loadOptionsMethod: 'getTicketCustomFields' },
                         default: '',
-                        placeholder: 'z. B. custom_dropdown',
+                        description: 'Wähle ein Custom Field aus Zammad (oder gib den API-Namen manuell ein)',
                     },
                     {
                         displayName: 'Wert',
