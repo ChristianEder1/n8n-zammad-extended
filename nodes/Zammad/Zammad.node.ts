@@ -136,6 +136,15 @@ function extractTicketsFromSearchResult(raw: IDataObject): IDataObject[] {
     return [];
 }
 
+// ─── Bekannte Ticket Custom-Field-Namen ─────────────────────────────────────
+const TICKET_CUSTOM_FIELDS = [
+    'tickettype', 'produktwahl', 'prio', 'type', 'supportart', 'betroffenerpartner',
+    'ticketqualitart', 'e_mail_text_anmeldung', 'kiticketinfo', 'fonio_ticket',
+    'hinweis', 'unterbrochen', 'notiz', 'sn', 'kd', 'standort', 'ansprechpartner',
+    'tel', 'telpart', 'mail', 'alt_ansprechpartner', 'telefonnummer_endkunde',
+    'mail_endkunde', 'installations_datum',
+] as const;
+
 // ─── Node-Klasse ─────────────────────────────────────────────────────────────
 
 export class Zammad implements INodeType {
@@ -322,6 +331,12 @@ export class Zammad implements INodeType {
 
                         if (add.owner) body.owner = add.owner;
 
+                        // Spezifische Zammad Custom Fields
+                        for (const cf of TICKET_CUSTOM_FIELDS) {
+                            if (add[cf] !== undefined && add[cf] !== '') body[cf] = add[cf];
+                        }
+
+                        // Weitere Custom Fields (Freitext-Fallback)
                         const customFields = this.getNodeParameter('customFields', i, {}) as IDataObject;
                         for (const f of (customFields.fields as IDataObject[] | undefined) ?? []) {
                             if (f.name) body[f.name as string] = f.value;
@@ -344,6 +359,12 @@ export class Zammad implements INodeType {
                         if (fields.owner) body.owner = fields.owner;
                         if (fields.customer) body.customer = fields.customer;
 
+                        // Spezifische Zammad Custom Fields
+                        for (const cf of TICKET_CUSTOM_FIELDS) {
+                            if (fields[cf] !== undefined && fields[cf] !== '') body[cf] = fields[cf];
+                        }
+
+                        // Weitere Custom Fields (Freitext-Fallback)
                         const customFields = this.getNodeParameter('customFields', i, {}) as IDataObject;
                         for (const f of (customFields.fields as IDataObject[] | undefined) ?? []) {
                             if (f.name) body[f.name as string] = f.value;
