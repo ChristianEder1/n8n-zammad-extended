@@ -235,6 +235,61 @@ export const customApiCallFields: INodeProperties[] = [
             },
         ],
     },
+    // ── Kontext-Hinweise je Endpunkt ──────────────────────────────────────────────
+    {
+        displayName: '<b>Pflicht-Parameter:</b> <code>query</code> – Elasticsearch-Suchstring.<br><br><b>Beispiele:</b><ul><li><code>*</code> → alle Tickets</li><li><code>state.name:open</code> → offene Tickets</li><li><code>title:"Anmeldeproblem"</code> → Titelsuche</li><li><code>tickettype:"Kunde"</code> → Custom-Field-Filter</li><li><code>customer.email:"user@firma.de"</code> → nach Kunde</li></ul><b>Optionale Parameter:</b> <code>limit</code> (Standard 25), <code>sort_by</code> (z.B. <code>created_at</code>), <code>order_by</code> (<code>asc</code> / <code>desc</code>)<br><br>⚠️ Setzt voraus, dass Elasticsearch in Zammad aktiviert ist. Ohne ES liefert dieser Endpunkt leere Ergebnisse.',
+        name: 'hintTicketSearch',
+        type: 'notice',
+        default: '',
+        displayOptions: {
+            show: { resource: ['customApiCall'], operation: ['execute'], endpoint: ['/api/v1/tickets/search'] },
+        },
+    },
+    {
+        displayName: '<b>Pflicht-Parameter:</b> <code>query</code> – Suchbegriff (Name, E-Mail, Login).<br><br><b>Optionale Parameter:</b> <code>limit</code> (Standard 25)',
+        name: 'hintUserSearch',
+        type: 'notice',
+        default: '',
+        displayOptions: {
+            show: { resource: ['customApiCall'], operation: ['execute'], endpoint: ['/api/v1/users/search'] },
+        },
+    },
+    {
+        displayName: '<b>Pflicht-Parameter:</b> <code>query</code> – Suchbegriff.<br><br><b>Optionale Parameter:</b> <code>limit</code> (Standard 25)',
+        name: 'hintOrgSearch',
+        type: 'notice',
+        default: '',
+        displayOptions: {
+            show: { resource: ['customApiCall'], operation: ['execute'], endpoint: ['/api/v1/organizations/search'] },
+        },
+    },
+    {
+        displayName: '<b>Optionale Parameter:</b> <code>per_page</code> (Standard 25, max 200), <code>page</code> (Seite)',
+        name: 'hintTicketList',
+        type: 'notice',
+        default: '',
+        displayOptions: {
+            show: { resource: ['customApiCall'], operation: ['execute'], endpoint: ['/api/v1/tickets'] },
+        },
+    },
+    {
+        displayName: '<b>Pflicht-Parameter:</b> <code>object</code> = <code>Ticket</code> (oder <code>User</code> / <code>Organization</code>)',
+        name: 'hintObjectManager',
+        type: 'notice',
+        default: '',
+        displayOptions: {
+            show: { resource: ['customApiCall'], operation: ['execute'], endpoint: ['/api/v1/object_manager_attributes'] },
+        },
+    },
+    {
+        displayName: '<b>Pflicht-Parameter:</b> <code>object</code> = <code>Ticket</code>, <code>o_id</code> = Ticket-ID (numerisch)',
+        name: 'hintTags',
+        type: 'notice',
+        default: '',
+        displayOptions: {
+            show: { resource: ['customApiCall'], operation: ['execute'], endpoint: ['/api/v1/tags'] },
+        },
+    },
     {
         displayName: 'Query-Parameter',
         name: 'queryParameters',
