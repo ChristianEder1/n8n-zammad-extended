@@ -343,6 +343,37 @@ export const ticketFields: INodeProperties[] = [
             },
         ],
     },
+    {
+        displayName: 'Custom Fields',
+        name: 'customFields',
+        type: 'fixedCollection',
+        typeOptions: { multipleValues: true },
+        placeholder: 'Custom Field hinzufügen',
+        default: {},
+        displayOptions: { show: { resource: ['ticket'], operation: ['create'] } },
+        description: 'Zammad-Custom-Felder (Feldname exakt wie in Zammad konfiguriert, z. B. "custom_dropdown")',
+        options: [
+            {
+                name: 'fields',
+                displayName: 'Feld',
+                values: [
+                    {
+                        displayName: 'Feldname',
+                        name: 'name',
+                        type: 'string',
+                        default: '',
+                        placeholder: 'z. B. custom_dropdown',
+                    },
+                    {
+                        displayName: 'Wert',
+                        name: 'value',
+                        type: 'string',
+                        default: '',
+                    },
+                ],
+            },
+        ],
+    },
 
     // ─── UPDATE ──────────────────────────────────────────────────────────────────
     {
@@ -416,6 +447,37 @@ export const ticketFields: INodeProperties[] = [
                 type: 'boolean',
                 default: false,
                 description: 'Whether die Notiz intern (nur Agenten) oder öffentlich (für Kunden sichtbar) ist',
+            },
+        ],
+    },
+    {
+        displayName: 'Custom Fields',
+        name: 'customFields',
+        type: 'fixedCollection',
+        typeOptions: { multipleValues: true },
+        placeholder: 'Custom Field hinzufügen',
+        default: {},
+        displayOptions: { show: { resource: ['ticket'], operation: ['update'] } },
+        description: 'Zammad-Custom-Felder (Feldname exakt wie in Zammad konfiguriert, z. B. "custom_dropdown")',
+        options: [
+            {
+                name: 'fields',
+                displayName: 'Feld',
+                values: [
+                    {
+                        displayName: 'Feldname',
+                        name: 'name',
+                        type: 'string',
+                        default: '',
+                        placeholder: 'z. B. custom_dropdown',
+                    },
+                    {
+                        displayName: 'Wert',
+                        name: 'value',
+                        type: 'string',
+                        default: '',
+                    },
+                ],
             },
         ],
     },

@@ -288,6 +288,11 @@ export class Zammad implements INodeType {
 
                         if (add.owner) body.owner = add.owner;
 
+                        const customFields = this.getNodeParameter('customFields', i, {}) as IDataObject;
+                        for (const f of (customFields.fields as IDataObject[] | undefined) ?? []) {
+                            if (f.name) body[f.name as string] = f.value;
+                        }
+
                         const result = await req('POST', '/api/v1/tickets', { body });
                         returnData.push({ json: result as IDataObject, pairedItem: { item: i } });
                     }
@@ -304,6 +309,11 @@ export class Zammad implements INodeType {
                         if (fields.priority) body.priority = fields.priority;
                         if (fields.owner) body.owner = fields.owner;
                         if (fields.customer) body.customer = fields.customer;
+
+                        const customFields = this.getNodeParameter('customFields', i, {}) as IDataObject;
+                        for (const f of (customFields.fields as IDataObject[] | undefined) ?? []) {
+                            if (f.name) body[f.name as string] = f.value;
+                        }
 
                         const result = await req('PUT', `/api/v1/tickets/${id}`, { body });
 
