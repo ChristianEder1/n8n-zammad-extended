@@ -295,6 +295,21 @@ const ticketCustomFields: INodeProperties[] = [
         type: 'string',
         default: '',
     },
+    // ── KI-Felder ────────────────────────────────────────────────────────────
+    {
+        displayName: 'KI-Priorisierung',
+        name: 'ki_priorisierung',
+        type: 'boolean',
+        default: false,
+        description: 'Gibt an ob dieses Ticket von der KI priorisiert wurde',
+    },
+    {
+        displayName: 'KI-Training',
+        name: 'ki_training',
+        type: 'boolean',
+        default: false,
+        description: 'Gibt an ob dieses Ticket als KI-Trainingsdaten markiert ist',
+    },
 ];
 
 export const ticketFields: INodeProperties[] = [
@@ -359,27 +374,26 @@ export const ticketFields: INodeProperties[] = [
                 name: 'status',
                 type: 'multiOptions',
                 options: [
-                    { name: 'Neu', value: 'new' },
-                    { name: 'Offen', value: 'open' },
-                    { name: 'Ausstehend – Erinnerung', value: 'pending reminder' },
-                    { name: 'Ausstehend – Schließen', value: 'pending close' },
-                    { name: 'Geschlossen', value: 'closed' },
-                    { name: 'Zusammengeführt', value: 'merged' },
+                    { name: 'Neu', value: 'neu' },
+                    { name: 'Offen', value: 'offen' },
+                    { name: 'Ausstehend', value: 'ausstehend' },
+                    { name: 'Geschlossen', value: 'geschlossen' },
+                    { name: 'Zusammengeführt', value: 'zusammen' },
                 ],
                 default: [],
-                description: 'Nur Tickets mit diesen Status',
+                description: 'Filterung per Teilstring-Match auf den Statusnamen (z. B. „geschlossen" trifft „04 geschlossen")',
             },
             {
                 displayName: 'Priorität',
                 name: 'priority',
                 type: 'multiOptions',
                 options: [
-                    { name: 'Niedrig (1)', value: '1 low' },
-                    { name: 'Normal (2)', value: '2 normal' },
-                    { name: 'Hoch (3)', value: '3 high' },
+                    { name: 'Niedrig', value: 'niedrig' },
+                    { name: 'Normal', value: 'normal' },
+                    { name: 'Hoch', value: 'hoch' },
                 ],
                 default: [],
-                description: 'Nur Tickets mit diesen Prioritäten',
+                description: 'Filterung per Teilstring-Match auf den Prioritätsnamen (z. B. „normal" trifft „Normal")',
             },
             {
                 displayName: 'Gruppe / Team',
@@ -650,6 +664,28 @@ export const ticketFields: INodeProperties[] = [
                     { name: '– kein Filter –', value: '' },
                     { name: 'Ja', value: 'Ja' },
                     { name: 'Nein', value: 'Nein' },
+                ],
+                default: '',
+            },
+            {
+                displayName: 'Filter: KI-Priorisierung',
+                name: 'ki_priorisierung',
+                type: 'options',
+                options: [
+                    { name: '– kein Filter –', value: '' },
+                    { name: 'Ja', value: 'true' },
+                    { name: 'Nein', value: 'false' },
+                ],
+                default: '',
+            },
+            {
+                displayName: 'Filter: KI-Training',
+                name: 'ki_training',
+                type: 'options',
+                options: [
+                    { name: '– kein Filter –', value: '' },
+                    { name: 'Ja', value: 'true' },
+                    { name: 'Nein', value: 'false' },
                 ],
                 default: '',
             },

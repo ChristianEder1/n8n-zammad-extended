@@ -1,14 +1,39 @@
 /**
  * Zammad API Testskript
- * Ausführen: ZAMMAD_URL=https://deine.zammad.de ZAMMAD_TOKEN=dein-token node test-zammad.mjs
+ *
+ * Variante A – .env Datei (empfohlen):
+ *   Kopiere .env.example → .env und trage deine Daten ein, dann:
+ *   node test-zammad.mjs
+ *
+ * Variante B – Umgebungsvariablen direkt:
+ *   ZAMMAD_URL=https://deine.zammad.de ZAMMAD_TOKEN=dein-token node test-zammad.mjs
  */
+import { readFileSync } from 'fs';
+import { resolve } from 'path';
+
+// .env Datei laden (falls vorhanden), ohne externe Abhängigkeiten
+try {
+    const envPath = resolve(process.cwd(), '.env');
+    const lines = readFileSync(envPath, 'utf-8').split('\n');
+    for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith('#')) continue;
+        const eqIdx = trimmed.indexOf('=');
+        if (eqIdx === -1) continue;
+        const key = trimmed.slice(0, eqIdx).trim();
+        const val = trimmed.slice(eqIdx + 1).trim().replace(/^["']|["']$/g, '');
+        if (key && !process.env[key]) process.env[key] = val;
+    }
+} catch {
+    // .env nicht vorhanden – Umgebungsvariablen müssen direkt gesetzt sein
+}
 
 const BASE = process.env.ZAMMAD_URL?.replace(/\/$/, '');
 const TOKEN = process.env.ZAMMAD_TOKEN;
 
 if (!BASE || !TOKEN) {
-    console.error('❌  Bitte Umgebungsvariablen setzen:');
-    console.error('   ZAMMAD_URL=https://deine.zammad.de ZAMMAD_TOKEN=dein-api-token node test-zammad.mjs');
+    console.error('❌  Credentials fehlen. Entweder .env Datei anlegen (siehe .env.example)');
+    console.error('   oder: ZAMMAD_URL=https://... ZAMMAD_TOKEN=... node test-zammad.mjs');
     process.exit(1);
 }
 
@@ -71,6 +96,72 @@ await test('Benutzer: Suche query=* limit=1', async () => {
     const { status, body } = await get('/api/v1/users/search', { query: '*', limit: '1' });
     if (status !== 200) throw new Error(`HTTP ${status}`);
     return { treffer: Array.isArray(body) ? body.length : '?' };
+});
+
+// ── DIAGNOSE: Rohe Antwortstrukturen ────────────────────────────────────────
+console.log(`\n${'═'.repeat(60)}\n  DIAGNOSE – Rohe API-Antworten\n${'═'.repeat(60)}`);
+
+// 6. GET /api/v1/tickets (ohne expand) – Strukturcheck
+await test('DIAGNOSE: GET /api/v1/tickets ohne expand (limit=2)', async () => {
+    const { status, body } = await get('/api/v1/tickets', { per_page: '2', page: '1' });
+    if (status !== 200) throw new Error(`HTTP ${status}: ${JSON.stringify(body).slice(0, 300)}`);
+    const isArray = Array.isArray(body);
+    const keys = isArray ? `[Array mit ${body.length} Einträgen]` : Object.keys(body).join(', ');
+    console.log('\n  Roh-Keys:', keys);
+    if (!isArray && body.tickets) console.log('  body.tickets:', JSON.stringify(body.tickets).slice(0, 100));
+    if (!isArray && body.assets?.Ticket) {
+        const ticketIds = Object.keys(body.assets.Ticket);
+        console.log('  assets.Ticket IDs:', ticketIds.slice(0, 5));
+    }
+    if (isArray && body.length > 0) console.log('  Ticket[0] keys:', Object.keys(body[0]).join(', '));
+    return { isArray, anzahl: isArray ? body.length : JSON.stringify(body.tickets ?? '?') };
+});
+
+// 7. GET /api/v1/tickets?expand=true – Strukturcheck
+await test('DIAGNOSE: GET /api/v1/tickets?expand=true (limit=2)', async () => {
+    const { status, body } = await get('/api/v1/tickets', { per_page: '2', page: '1', expand: 'true' });
+    if (status !== 200) throw new Error(`HTTP ${status}: ${JSON.stringify(body).slice(0, 300)}`);
+    const isArray = Array.isArray(body);
+    const keys = isArray ? `[Array mit ${body.length} Einträgen]` : Object.keys(body).join(', ');
+    console.log('\n  Roh-Keys:', keys);
+    if (isArray && body.length > 0) {
+        const t = body[0];
+        console.log('  Ticket[0] state:', t.state, '| priority:', t.priority, '| group:', t.group);
+        console.log('  Ticket[0] alle Keys:', Object.keys(t).join(', '));
+    }
+    return { isArray, anzahl: isArray ? body.length : '(kein Array)' };
+});
+
+// 8. ES Suche – rohe Antwortstruktur
+await test('DIAGNOSE: ES Suche /api/v1/tickets/search query=* limit=2', async () => {
+    const { status, body } = await get('/api/v1/tickets/search', { query: '*', limit: '2' });
+    if (status !== 200) throw new Error(`HTTP ${status}: ${JSON.stringify(body).slice(0, 300)}`);
+    const keys = Object.keys(body).join(', ');
+    console.log('\n  Roh-Keys:', keys);
+    if (body.result) console.log('  body.result (Typ):', Array.isArray(body.result) ? `Array[${body.result.length}]` : typeof body.result);
+    if (Array.isArray(body.result) && body.result.length > 0) console.log('  result[0]:', JSON.stringify(body.result[0]));
+    if (body.assets?.Ticket) console.log('  assets.Ticket IDs:', Object.keys(body.assets.Ticket).slice(0, 5));
+    return { keys, result_count: body.result?.length ?? 0, total: body.count ?? '?' };
+});
+
+// 9. Ticket-Stati (wichtig für Filter!)
+await test('DIAGNOSE: Alle Ticket-Stati (GET /api/v1/ticket_states)', async () => {
+    const { status, body } = await get('/api/v1/ticket_states');
+    if (status !== 200) throw new Error(`HTTP ${status}`);
+    const states = Array.isArray(body) ? body : [];
+    console.log('\n  Stati:');
+    for (const s of states) console.log(`    id=${s.id} name="${s.name}" active=${s.active}`);
+    return { anzahl: states.length };
+});
+
+// 10. Ticket-Prioritäten (wichtig für Filter!)
+await test('DIAGNOSE: Alle Ticket-Prioritäten (GET /api/v1/ticket_priorities)', async () => {
+    const { status, body } = await get('/api/v1/ticket_priorities');
+    if (status !== 200) throw new Error(`HTTP ${status}`);
+    const prios = Array.isArray(body) ? body : [];
+    console.log('\n  Prioritäten:');
+    for (const p of prios) console.log(`    id=${p.id} name="${p.name}" active=${p.active}`);
+    return { anzahl: prios.length };
 });
 
 console.log(`\n${'─'.repeat(60)}\n✅  Tests abgeschlossen\n`);

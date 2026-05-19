@@ -150,7 +150,7 @@ const TICKET_CUSTOM_FIELDS = [
     'ticketqualitart', 'e_mail_text_anmeldung', 'kiticketinfo', 'fonio_ticket',
     'hinweis', 'unterbrochen', 'notiz', 'sn', 'kd', 'standort', 'ansprechpartner',
     'tel', 'telpart', 'mail', 'alt_ansprechpartner', 'telefonnummer_endkunde',
-    'mail_endkunde', 'installations_datum',
+    'mail_endkunde', 'installations_datum', 'ki_priorisierung', 'ki_training',
 ] as const;
 
 // ─── Node-Klasse ─────────────────────────────────────────────────────────────
@@ -323,7 +323,7 @@ export class Zammad implements INodeType {
                         const CF_SEARCH_FILTERS = [
                             'tickettype', 'produktwahl', 'prio', 'type', 'supportart',
                             'betroffenerpartner', 'ticketqualitart', 'e_mail_text_anmeldung',
-                            'kiticketinfo', 'fonio_ticket',
+                            'kiticketinfo', 'fonio_ticket', 'ki_priorisierung', 'ki_training',
                         ] as const;
                         for (const cf of CF_SEARCH_FILTERS) {
                             const val = searchOptions[cf];
