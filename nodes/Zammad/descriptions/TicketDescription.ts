@@ -11,7 +11,7 @@ export const ticketOperations: INodeProperties[] = [
             {
                 name: 'Get All (mit Filtern)',
                 value: 'getAll',
-                description: 'Mehrere Tickets abrufen – mit Status, Priorität, Gruppe, Datum etc.',
+                description: 'Mehrere Tickets abrufen – mit Status, Priorität, Gruppe, Datum etc. (kein Elasticsearch erforderlich)',
                 action: 'Get all tickets',
             },
             {
@@ -426,15 +426,6 @@ export const ticketFields: INodeProperties[] = [
                 type: 'dateTime',
                 default: '',
                 description: 'Nur Tickets, die nach diesem Zeitpunkt aktualisiert wurden',
-            },
-            {
-                displayName: 'Eigene Suchabfrage (Elasticsearch)',
-                name: 'customQuery',
-                type: 'string',
-                default: '',
-                placeholder: 'z. B. title:Fehler AND tag:dringend',
-                description:
-                    'Rohe Zammad/Elasticsearch-Abfrage – wird mit allen anderen Filtern per AND verknüpft',
             },
         ],
     },

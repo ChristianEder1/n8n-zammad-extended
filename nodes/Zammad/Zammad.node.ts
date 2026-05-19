@@ -30,56 +30,64 @@ import {
  * Baut aus den UI-Filtern einen Elasticsearch-kompatiblen Zammad-Query-String.
  * Leere Filter ergeben "*" (alle Tickets).
  */
-function buildTicketQuery(filters: IDataObject): string {
-    const parts: string[] = [];
+/**
+ * Client-seitige Filterung von Tickets (kein Elasticsearch erforderlich).
+ * Felder kommen von GET /api/v1/tickets?expand=true (String-Werte).
+ */
+function applyTicketFilters(tickets: IDataObject[], filters: IDataObject): IDataObject[] {
+    let result = tickets;
 
     const status = filters.status as string[] | undefined;
     if (status && status.length > 0) {
-        const joined = status.map((s) => `"${s}"`).join(' ');
-        parts.push(`state.name:(${joined})`);
+        result = result.filter((t) => {
+            const s = String(t.state || '').toLowerCase();
+            return status.some((f) => s === f.toLowerCase() || s.includes(f.toLowerCase()));
+        });
     }
 
     const priority = filters.priority as string[] | undefined;
     if (priority && priority.length > 0) {
-        const joined = priority.map((p) => `"${p}"`).join(' ');
-        parts.push(`priority.name:(${joined})`);
+        result = result.filter((t) => {
+            const p = String(t.priority || '').toLowerCase();
+            return priority.some((f) => p === f.toLowerCase() || p.includes(f.toLowerCase()));
+        });
     }
 
     if (filters.group) {
-        parts.push(`group.name:"${esc(String(filters.group))}"`);
+        const g = String(filters.group).toLowerCase();
+        result = result.filter((t) => String(t.group || '').toLowerCase().includes(g));
     }
 
     if (filters.owner) {
-        parts.push(`owner.email:"${esc(String(filters.owner))}"`);
+        const o = String(filters.owner).toLowerCase();
+        result = result.filter((t) => String(t.owner || '').toLowerCase().includes(o));
     }
 
     if (filters.customer) {
-        parts.push(`customer.email:"${esc(String(filters.customer))}"`);
+        const c = String(filters.customer).toLowerCase();
+        result = result.filter((t) => String(t.customer || '').toLowerCase().includes(c));
     }
 
     if (filters.organization) {
-        parts.push(`organization.name:"${esc(String(filters.organization))}"`);
+        const org = String(filters.organization).toLowerCase();
+        result = result.filter((t) => String(t.organization || '').toLowerCase().includes(org));
     }
 
     if (filters.createdAfter) {
         const d = new Date(filters.createdAfter as string);
         if (!isNaN(d.getTime())) {
-            parts.push(`created_at:>=${d.toISOString()}`);
+            result = result.filter((t) => !!t.created_at && new Date(String(t.created_at)) >= d);
         }
     }
 
     if (filters.updatedAfter) {
         const d = new Date(filters.updatedAfter as string);
         if (!isNaN(d.getTime())) {
-            parts.push(`updated_at:>=${d.toISOString()}`);
+            result = result.filter((t) => !!t.updated_at && new Date(String(t.updated_at)) >= d);
         }
     }
 
-    if (filters.customQuery) {
-        parts.push(`(${String(filters.customQuery)})`);
-    }
-
-    return parts.length > 0 ? parts.join(' AND ') : '*';
+    return result;
 }
 
 /**
@@ -264,25 +272,39 @@ export class Zammad implements INodeType {
                         returnData.push({ json: result as IDataObject, pairedItem: { item: i } });
                     }
 
-                    // ── GET ALL (mit Filtern über Zammad Search-API) ─────────────────
+                    // ── GET ALL (REST-Endpoint, kein Elasticsearch erforderlich) ──────
                     else if (operation === 'getAll') {
                         const limit = this.getNodeParameter('limit', i, 25) as number;
                         const sortBy = this.getNodeParameter('sortBy', i, 'created_at') as string;
                         const order = this.getNodeParameter('sortOrder', i, 'desc') as string;
                         const filters = this.getNodeParameter('filters', i, {}) as IDataObject;
 
-                        const query = buildTicketQuery(filters);
-
-                        const raw = await req('GET', '/api/v1/tickets/search', {
+                        const raw = await req('GET', '/api/v1/tickets', {
                             qs: {
-                                query,
-                                limit: String(limit),
+                                per_page: String(limit),
+                                page: '1',
                                 sort_by: sortBy,
                                 order_by: order,
+                                expand: 'true',
                             },
                         });
 
-                        const tickets = extractTicketsFromSearchResult(raw as IDataObject);
+                        // Antwort normalisieren: Array oder Assets-Objekt
+                        let tickets: IDataObject[] = [];
+                        if (Array.isArray(raw)) {
+                            tickets = raw as IDataObject[];
+                        } else {
+                            const rawObj = raw as IDataObject;
+                            if (rawObj.assets && (rawObj.assets as IDataObject).Ticket) {
+                                const ticketMap = (rawObj.assets as IDataObject).Ticket as Record<string, IDataObject>;
+                                const ids = (rawObj.tickets as number[]) || [];
+                                tickets = ids.map((id) => ticketMap[String(id)]).filter(Boolean);
+                            }
+                        }
+
+                        // Client-seitige Filter anwenden
+                        tickets = applyTicketFilters(tickets, filters);
+
                         for (const t of tickets) {
                             returnData.push({ json: t, pairedItem: { item: i } });
                         }
