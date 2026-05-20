@@ -164,4 +164,23 @@ await test('DIAGNOSE: Alle Ticket-Prioritäten (GET /api/v1/ticket_priorities)',
     return { anzahl: prios.length };
 });
 
+// 11. Paginierungstest + created_at Werte (simuliert getAll wie der Node es macht)
+await test('DIAGNOSE: getAll-Simulation (per_page=100, sort=created_at desc, expand=true)', async () => {
+    const { status, body } = await get('/api/v1/tickets', {
+        per_page: '100', page: '1', sort_by: 'created_at', order_by: 'desc', expand: 'true',
+    });
+    if (status !== 200) throw new Error(`HTTP ${status}: ${JSON.stringify(body).slice(0, 200)}`);
+    const tickets = Array.isArray(body) ? body : [];
+    console.log(`\n  Zurückgegeben: ${tickets.length} Tickets`);
+    if (tickets.length > 0) {
+        console.log('  Neuestes Ticket created_at:', tickets[0].created_at);
+        console.log('  Ältestes Ticket created_at:', tickets[tickets.length - 1].created_at);
+        const after2026 = tickets.filter(t => t.created_at && new Date(t.created_at) >= new Date('2026-01-01T00:00:00Z'));
+        console.log(`  Tickets mit created_at >= 2026-01-01: ${after2026.length}`);
+        const before2026 = tickets.filter(t => t.created_at && new Date(t.created_at) < new Date('2026-01-01T00:00:00Z'));
+        console.log(`  Tickets mit created_at < 2026-01-01: ${before2026.length}`);
+    }
+    return { anzahl: tickets.length };
+});
+
 console.log(`\n${'─'.repeat(60)}\n✅  Tests abgeschlossen\n`);

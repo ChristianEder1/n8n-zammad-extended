@@ -279,33 +279,44 @@ export class Zammad implements INodeType {
                         const order = this.getNodeParameter('sortOrder', i, 'desc') as string;
                         const filters = this.getNodeParameter('filters', i, {}) as IDataObject;
 
-                        const raw = await req('GET', '/api/v1/tickets', {
-                            qs: {
-                                per_page: String(limit),
-                                page: '1',
-                                sort_by: sortBy,
-                                order_by: order,
-                                expand: 'true',
-                            },
-                        });
+                        // Zammad liefert max. 100 Tickets pro Seite → paginieren
+                        const ZAMMAD_PAGE_SIZE = 100;
+                        let allTickets: IDataObject[] = [];
+                        let page = 1;
 
-                        // Antwort normalisieren: Array oder Assets-Objekt
-                        let tickets: IDataObject[] = [];
-                        if (Array.isArray(raw)) {
-                            tickets = raw as IDataObject[];
-                        } else {
-                            const rawObj = raw as IDataObject;
-                            if (rawObj.assets && (rawObj.assets as IDataObject).Ticket) {
-                                const ticketMap = (rawObj.assets as IDataObject).Ticket as Record<string, IDataObject>;
-                                const ids = (rawObj.tickets as number[]) || [];
-                                tickets = ids.map((id) => ticketMap[String(id)]).filter(Boolean);
+                        while (allTickets.length < limit) {
+                            const batchSize = Math.min(ZAMMAD_PAGE_SIZE, limit - allTickets.length);
+                            const raw = await req('GET', '/api/v1/tickets', {
+                                qs: {
+                                    per_page: String(batchSize),
+                                    page: String(page),
+                                    sort_by: sortBy,
+                                    order_by: order,
+                                    expand: 'true',
+                                },
+                            });
+
+                            let batch: IDataObject[] = [];
+                            if (Array.isArray(raw)) {
+                                batch = raw as IDataObject[];
+                            } else {
+                                const rawObj = raw as IDataObject;
+                                if (rawObj.assets && (rawObj.assets as IDataObject).Ticket) {
+                                    const ticketMap = (rawObj.assets as IDataObject).Ticket as Record<string, IDataObject>;
+                                    const ids = (rawObj.tickets as number[]) || [];
+                                    batch = ids.map((id) => ticketMap[String(id)]).filter(Boolean);
+                                }
                             }
+
+                            if (batch.length === 0) break; // Keine weiteren Tickets
+                            allTickets = allTickets.concat(batch);
+                            if (batch.length < batchSize) break; // Letzte Seite erreicht
+                            page++;
                         }
 
                         // Client-seitige Filter anwenden
-                        tickets = applyTicketFilters(tickets, filters);
-
-                        for (const t of tickets) {
+                        const filtered = applyTicketFilters(allTickets, filters);
+                        for (const t of filtered) {
                             returnData.push({ json: t, pairedItem: { item: i } });
                         }
                     }
