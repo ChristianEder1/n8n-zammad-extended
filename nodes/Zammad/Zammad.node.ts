@@ -45,6 +45,14 @@ function applyTicketFilters(tickets: IDataObject[], filters: IDataObject): IData
         });
     }
 
+    const excludeStatus = filters.excludeStatus as string[] | undefined;
+    if (excludeStatus && excludeStatus.length > 0) {
+        result = result.filter((t) => {
+            const s = String(t.state || '').toLowerCase();
+            return !excludeStatus.some((f) => s === f.toLowerCase() || s.includes(f.toLowerCase()));
+        });
+    }
+
     const priority = filters.priority as string[] | undefined;
     if (priority && priority.length > 0) {
         result = result.filter((t) => {
