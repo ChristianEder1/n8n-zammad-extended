@@ -233,6 +233,28 @@ export class Zammad implements INodeType {
                         value: String(a.name),
                     }));
             },
+
+            async getGroups(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
+                const credentials = await this.getCredentials('zammadApi');
+                const baseUrl = (credentials.baseUrl as string).replace(/\/$/, '');
+                const apiToken = credentials.apiToken as string;
+
+                const groups = (await this.helpers.httpRequest({
+                    method: 'GET',
+                    url: `${baseUrl}/api/v1/groups`,
+                    headers: {
+                        Authorization: `Token token=${apiToken}`,
+                    },
+                    json: true,
+                })) as IDataObject[];
+
+                return (Array.isArray(groups) ? groups : [])
+                    .filter((g) => g.active !== false)
+                    .map((g) => ({
+                        name: String(g.name),
+                        value: String(g.name),
+                    }));
+            },
         },
     };
 

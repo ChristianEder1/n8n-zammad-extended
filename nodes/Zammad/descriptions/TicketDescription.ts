@@ -757,11 +757,11 @@ export const ticketFields: INodeProperties[] = [
     {
         displayName: 'Gruppe',
         name: 'createGroup',
-        type: 'string',
+        type: 'options',
+        typeOptions: { loadOptionsMethod: 'getGroups' },
         required: true,
         displayOptions: { show: { resource: ['ticket'], operation: ['create'] } },
-        default: 'Users',
-        placeholder: 'z. B. Support',
+        default: '',
         description: 'Zammad-Gruppe, der das Ticket zugeordnet wird',
     },
     {
@@ -931,9 +931,9 @@ export const ticketFields: INodeProperties[] = [
             {
                 displayName: 'Gruppe',
                 name: 'group',
-                type: 'string',
+                type: 'options',
+                typeOptions: { loadOptionsMethod: 'getGroups' },
                 default: '',
-                placeholder: 'z. B. Support',
             },
             {
                 displayName: 'Status',
